@@ -1,0 +1,49 @@
+name: E2E Tests & Mochawesome Report
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  e2e-tests:
+    name: Cypress Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Start Application Server
+        run: |
+          npm start &
+          timeout 30 bash -c 'until curl -s http://localhost:3000/login > /dev/null; do sleep 1; done'
+
+      - name: Run Cypress Tests & Generate Mochawesome Report
+        run: npm run test:all
+
+      - name: Upload Mochawesome Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-report
+          path: cypress/reports/
+          retention-days: 30
+
+      - name: Upload Failure Screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots/
+          retention-days: 14
