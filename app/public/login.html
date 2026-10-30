@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cypress Mini Shop - Login</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-brand">
+        <span>🛍️</span> Cypress Mini Shop
+      </div>
+      <p class="auth-subtitle">Sign in to your account</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input class="form-control" type="text" id="email" name="email" placeholder="name@minishop.com" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input class="form-control" type="password" id="password" name="password" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn-primary">Sign In</button>
+    </form>
+
+    <div class="auth-footer">
+      <span>Admin: admin@minishop.com | Customer: customer@minishop.com</span>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      // Identify user
+      let name = "Welcome User";
+      if (email === "customer@minishop.com") {
+        name = "Jane Doe";
+      } else if (email === "admin@minishop.com") {
+        name = "Administrator";
+      } else if (email.includes("@")) {
+        name = email.split("@")[0];
+      }
+
+      const userData = { email, name, loggedInAt: Date.now() };
+
+      // Set cookie and localStorage for session persistence
+      document.cookie = "shop_user=" + encodeURIComponent(JSON.stringify(userData)) + "; path=/; max-age=86400";
+      localStorage.setItem("shop_user", JSON.stringify(userData));
+
+      window.location.href = '/dashboard';
+    });
+  </script>
+</body>
+</html>

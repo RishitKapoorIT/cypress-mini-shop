@@ -1,0 +1,25 @@
+{
+  "name": "cypress-mini-shop",
+  "version": "1.0.0",
+  "description": "Modular Cypress Test Suite for a Modern Web App (Cypress Mini Shop)",
+  "main": "app/server.js",
+  "scripts": {
+    "start": "node app/server.js",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:parallel": "concurrently \"npx cypress run --spec cypress/e2e/auth/login.cy.js\" \"npx cypress run --spec cypress/e2e/dashboard/products.cy.js\" \"npx cypress run --spec cypress/e2e/dashboard/flakiness.cy.js\"",
+    "report:merge": "npx mochawesome-merge cypress/results/*.json > cypress/reports/output.json",
+    "report:generate": "npx marge cypress/reports/output.json -f mochawesome-report -o cypress/reports",
+    "test:all": "npm run cy:parallel && npm run report:merge && npm run report:generate"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cypress": "^14.1.0",
+    "mochawesome": "^7.1.3",
+    "mochawesome-merge": "^4.3.0",
+    "mochawesome-report-generator": "^6.2.0"
+  }
+}

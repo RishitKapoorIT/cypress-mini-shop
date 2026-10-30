@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cypress Mini Shop - Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <header class="dashboard-nav">
+    <div class="nav-brand">
+      <span>🛍️</span> Cypress Mini Shop
+    </div>
+    <div class="user-profile-badge">
+      <div class="user-avatar" id="avatarLetter">U</div>
+      <div class="user-profile" id="userProfileText">Jane Doe</div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="dashboard-container">
+    <div class="dashboard-header">
+      <h1 class="welcome-header" id="welcomeHeader">Welcome to Cypress Mini Shop</h1>
+      <button class="btn-add" data-cy="add-product-btn" id="openModalBtn">
+        <span>+</span> Add Product
+      </button>
+    </div>
+
+    <!-- Dashboard Stats -->
+    <section class="dashboard-stats" data-cy="dashboard-stats">
+      <div class="stat-card">
+        <span class="stat-num">$24,850</span>
+        <span class="stat-label">Total Revenue</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">1,420</span>
+        <span class="stat-label">Total Orders</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">89</span>
+        <span class="stat-label">Products Listed</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">99.4%</span>
+        <span class="stat-label">System Uptime</span>
+      </div>
+    </section>
+
+    <!-- Products Panel -->
+    <section class="products-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">Product Catalog</h2>
+      </div>
+
+      <!-- Loading Spinner (removed from DOM once loaded) -->
+      <div class="spinner-wrapper" data-cy="loading-spinner" id="loadingSpinner">
+        <div class="loading-spinner"></div>
+        <p>Loading products from API...</p>
+      </div>
+
+      <!-- Product Table (initially hidden until API resolves) -->
+      <table class="product-table" id="productTable" style="display: none;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Product Name</th>
+            <th>Price</th>
+            <th>Stock Status</th>
+          </tr>
+        </thead>
+        <tbody class="product-list" id="productTableBody">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Add Product Modal / Form -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Add New Product</h3>
+        <button class="modal-close" id="closeModalBtn">&times;</button>
+      </div>
+      <form id="addProductForm">
+        <div class="form-group">
+          <label>Product Name</label>
+          <input class="form-control" type="text" name="productName" id="productNameInput" placeholder="e.g. UltraWide Monitor" required>
+        </div>
+        <div class="form-group">
+          <label>Price</label>
+          <input class="form-control" type="text" name="price" id="priceInput" placeholder="e.g. $399.99" required>
+        </div>
+        <button type="save-product" class="btn-primary" id="saveProductBtn" style="cursor: pointer;">Save Product</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Read session / user data
+    function getUserData() {
+      try {
+        const stored = localStorage.getItem("shop_user");
+        if (stored) return JSON.parse(stored);
+        const match = document.cookie.match(/shop_user=([^;]+)/);
+        if (match) return JSON.parse(decodeURIComponent(match[1]));
+      } catch (e) {}
+      return null;
+    }
+
+    const user = getUserData();
+    if (user && user.name) {
+      document.getElementById('userProfileText').textContent = user.name;
+      document.getElementById('avatarLetter').textContent = user.name.charAt(0).toUpperCase();
+      document.getElementById('welcomeHeader').textContent = "Welcome, " + user.name;
+    }
+
+    // Modal open / close handlers
+    const modal = document.getElementById('productModal');
+    const openBtn = document.getElementById('openModalBtn');
+    const closeBtn = document.getElementById('closeModalBtn');
+
+    openBtn.addEventListener('click', () => {
+      modal.style.display = 'flex';
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    // Render product item in table/list
+    function renderProduct(item) {
+      const tbody = document.getElementById('productTableBody');
+      const tr = document.createElement('tr');
+      const stockBadge = (item.stock || "In Stock") === "In Stock" ? "badge-in-stock" : "badge-low-stock";
+      tr.innerHTML = `
+        <td>#${item.id || tbody.children.length + 1}</td>
+        <td><strong>${item.name || ''}</strong></td>
+        <td>${item.price || '$0.00'}</td>
+        <td><span class="badge ${stockBadge}">${item.stock || 'In Stock'}</span></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // Handle add product
+    document.getElementById('addProductForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveProduct();
+    });
+
+    document.getElementById('saveProductBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      saveProduct();
+    });
+
+    function saveProduct() {
+      const nameInput = document.getElementById('productNameInput');
+      const priceInput = document.getElementById('priceInput');
+      const name = nameInput.value.trim();
+      const price = priceInput.value.trim();
+
+      if (!name) return;
+
+      renderProduct({
+        id: document.getElementById('productTableBody').children.length + 1,
+        name: name,
+        price: price || "$0.00",
+        stock: "In Stock"
+      });
+
+      nameInput.value = '';
+      priceInput.value = '';
+      modal.style.display = 'none';
+    }
+
+    // Fetch products from /api/products
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        let items = [];
+        if (Array.isArray(data)) {
+          items = data;
+        } else if (data && Array.isArray(data.mockProducts)) {
+          items = data.mockProducts;
+        } else if (data && Array.isArray(data.body)) {
+          items = data.body;
+        }
+
+        const tbody = document.getElementById('productTableBody');
+        tbody.innerHTML = '';
+        items.forEach(renderProduct);
+
+        // Remove spinner from DOM to satisfy cy.get('[data-cy="loading-spinner"]').should('not.exist')
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) {
+          spinner.remove();
+        }
+
+        // Show product table to satisfy cy.get('.product-table').should('be.visible')
+        const table = document.getElementById('productTable');
+        if (table) {
+          table.style.display = 'table';
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching products:", err);
+        const spinner = document.getElementById('loadingSpinner');
+        if (spinner) spinner.remove();
+        const table = document.getElementById('productTable');
+        if (table) table.style.display = 'table';
+      });
+  </script>
+</body>
+</html>

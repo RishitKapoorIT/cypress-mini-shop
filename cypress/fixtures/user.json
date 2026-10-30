@@ -1,0 +1,11 @@
+{
+  "validUser": {
+    "email": "customer@minishop.com",
+    "password": "CustomerPassword123!",
+    "name": "Jane Doe"
+  },
+  "mockProducts": [
+    { "id": 1, "name": "Wireless Mechanical Keyboard", "price": "$129.99", "stock": "In Stock" },
+    { "id": 2, "name": "Ergonomic Vertical Mouse", "price": "$59.99", "stock": "Low Stock" }
+  ]
+}
