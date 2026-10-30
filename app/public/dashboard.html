@@ -60,7 +60,7 @@
       </div>
 
       <!-- Product Table (initially hidden until API resolves) -->
-      <table class="product-table" id="productTable" style="display: none;">
+      <table class="product-table hidden-table" id="productTable">
         <thead>
           <tr>
             <th>ID</th>
@@ -92,7 +92,7 @@
           <label>Price</label>
           <input class="form-control" type="text" name="price" id="priceInput" placeholder="e.g. $399.99" required>
         </div>
-        <button type="save-product" class="btn-primary" id="saveProductBtn" style="cursor: pointer;">Save Product</button>
+        <button type="submit" class="btn-primary" id="saveProductBtn" data-cy="save-product">Save Product</button>
       </form>
     </div>
   </div>
@@ -200,7 +200,7 @@
         // Show product table to satisfy cy.get('.product-table').should('be.visible')
         const table = document.getElementById('productTable');
         if (table) {
-          table.style.display = 'table';
+          table.classList.remove('hidden-table');
         }
       })
       .catch(err => {
@@ -208,7 +208,7 @@
         const spinner = document.getElementById('loadingSpinner');
         if (spinner) spinner.remove();
         const table = document.getElementById('productTable');
-        if (table) table.style.display = 'table';
+        if (table) table.classList.remove('hidden-table');
       });
   </script>
 </body>

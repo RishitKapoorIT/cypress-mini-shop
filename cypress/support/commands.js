@@ -11,7 +11,7 @@ Cypress.Commands.add('addProduct', (productName, price) => {
   cy.get('[data-cy="add-product-btn"]').click();
   cy.get('input[name="productName"]').clear().type(productName);
   cy.get('input[name="price"]').clear().type(price);
-  cy.get('button[type="save-product"]').click();
+  cy.get('button[type="save-product"], button[data-cy="save-product"]').click();
 });
 
 // Persistent Session Command using cy.session()
